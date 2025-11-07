@@ -1,4 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post, Res, Req } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { AppService } from './app.service';
 
 @Controller()
@@ -8,5 +9,23 @@ export class AppController {
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+
+  @Get('test-cors')
+  testCors(@Res() res: Response) {
+    return res.json({
+      message: 'CORS is working!',
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  @Post('test-cors')
+  testCorsPost(@Req() req: Request, @Res() res: Response) {
+    console.log('Test CORS POST received:', req.body);
+    return res.json({
+      message: 'CORS POST is working!',
+      receivedBody: req.body,
+      timestamp: new Date().toISOString(),
+    });
   }
 }

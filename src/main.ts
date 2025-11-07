@@ -12,39 +12,43 @@ async function bootstrap() {
 
   // Get environment variables with defaults
   const port = parseInt(process.env.PORT || '3000', 10);
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.0.102:5173';
   const nodeEnv = process.env.NODE_ENV || 'development';
 
   // Configure JSON parsing with increased payload size limit for large base64 images
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-  // CORS Configuration
-  const corsOptions = {
-    origin: [
-      frontendUrl,
-      'http://localhost:5173', // Default Vite dev server
-      'http://127.0.0.1:5173', // Alternative localhost
-      'http://192.168.0.117:5173', // Local network access
-    ],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-    allowedHeaders: [
-      'Content-Type', 
-      'Authorization', 
-      'X-Requested-With',
-      'Accept',
-      'X-User-Agent', 
-      'X-Forwarded-For'
-    ],
-    exposedHeaders: [
-      'Content-Length',
-      'X-User-Agent', 
-      'X-Forwarded-For'
-    ]
-  };
+  // CORS configuration
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://192.168.0.102:5173',
+    'http://192.168.0.117:5173'
+  ];
 
-  app.enableCors(corsOptions);
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    
+    // Only allow requests from our frontend
+    if (origin && allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    }
+    
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-access-token');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+    
+    next();
+  });
+  
+  // Log CORS configuration
+  logger.log('CORS is enabled for origins:', allowedOrigins);
 
   // Start the application
   await app.listen(port, '0.0.0.0'); // Listen on all network interfaces
@@ -52,7 +56,7 @@ async function bootstrap() {
   logger.log(`Application is running in ${nodeEnv} mode`);
   logger.log(`Listening on port ${port}`);
   logger.log(`Frontend URL: ${frontendUrl}`);
-  logger.log(`CORS enabled for: ${corsOptions.origin.join(', ')}`);
+  logger.log('CORS is enabled for all origins in development mode');
 }
 
 bootstrap().catch(err => {
