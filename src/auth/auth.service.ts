@@ -1,60 +1,41 @@
-import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
+import { 
+  Injectable, 
+  UnauthorizedException, 
+  ConflictException, 
+  Logger, 
+  BadRequestException,
+  NotFoundException
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 
-// Define the shape of the user data we'll return (without password)
-export interface UserWithoutPassword {
+export interface AdminUser {
   id: number;
-  user: string;  // This is the email in your Admin model
+  user: string;
   role: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  user: Omit<AdminUser, 'password'>;
 }
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly saltRounds = 10;
-  
-  // Access the Admin model through the PrismaService
-  private get adminModel() {
-    return (this.prismaService as any).admin;
-  }
 
   constructor(
-    private prismaService: PrismaService,
-    private jwtService: JwtService
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService
   ) {}
 
-  async login(email: string, password: string) {
-    try {
-      const user = await this.validateUser(email, password);
-      if (!user) {
-        throw new UnauthorizedException('Invalid email or password');
-      }
-      const payload = { 
-        sub: user.id, 
-        email: user.user,
-        role: user.role 
-      };
-      return {
-        access_token: this.jwtService.sign(payload),
-        user: {
-          id: user.id,
-          email: user.user,
-          role: user.role,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt
-        }
-      };
-    } catch (error) {
-      this.logger.error(`Login error: ${error.message}`, error.stack);
-      throw new UnauthorizedException('Authentication failed');
-    }
-  }
-
-  async validateUser(email: string, password: string): Promise<UserWithoutPassword | null> {
+  async validateUser(email: string, password: string): Promise<AdminUser | null> {
     this.logger.log(`Validating user: ${email}`);
     
     try {
@@ -63,9 +44,17 @@ export class AuthService {
       }
 
       // Find user with case-insensitive email search
-      const user = await this.adminModel.findFirst({
+      const user = await this.prisma.admin.findFirst({
         where: {
           user: email.toLowerCase()
+        },
+        select: {
+          id: true,
+          user: true,
+          password: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true
         }
       });
       
@@ -83,16 +72,44 @@ export class AuthService {
       }
 
       // Return user data without password
-      return {
-        id: user.id,
-        user: user.user,
-        role: user.role || 'USER',
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _, ...result } = user;
+      return result as AdminUser;
       
     } catch (error) {
       this.logger.error(`Error validating user: ${error.message}`, error.stack);
+      throw new UnauthorizedException('Authentication failed');
+    }
+  }
+
+  async login(loginDto: LoginDto): Promise<LoginResponse> {
+    const { email, password } = loginDto;
+    
+    try {
+      const user = await this.validateUser(email, password);
+      
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const payload = { 
+        sub: user.id, 
+        email: user.user, 
+        role: user.role 
+      };
+
+      return {
+        access_token: this.jwtService.sign(payload),
+        user: {
+          id: user.id,
+          user: user.user,
+          role: user.role,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        }
+      };
+    } catch (error) {
+      this.logger.error(`Login error: ${error.message}`, error.stack);
       throw new UnauthorizedException('Authentication failed');
     }
   }
@@ -111,7 +128,7 @@ export class AuthService {
       }
 
       // Check if user already exists (case-insensitive)
-      const existingUser = await this.prismaService.admin.findFirst({
+      const existingUser = await this.prisma.admin.findFirst({
         where: {
           user: sanitizedEmail
         }
@@ -131,7 +148,7 @@ export class AuthService {
       }
 
       // Create new user with the correct fields
-      const newUser = await this.prismaService.admin.create({
+const newUser = await this.prisma.admin.create({
         data: {
           user: sanitizedEmail,
           password: hashedPassword,
@@ -157,7 +174,7 @@ export class AuthService {
 
   async getAllUsers() {
     try {
-      const allUsers = await this.prismaService.admin.findMany({
+const allUsers = await this.prisma.admin.findMany({
         select: {
           id: true,
           user: true,

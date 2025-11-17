@@ -1,31 +1,26 @@
-// schema.prisma
-
-datasource db {
-  provider = "mysql"
-  url      = "mysql://root:senha123@192.168.0.117:3306/teste?schema=public"
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-model Img {
-  id        Int       @id @default(autoincrement())
-  url       String?
-  base64    String    @db.LongText
-  altText   String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:senha123@192.168.0.126:3306/teste?schema=public"
 }
 
 model News {
-  id          Int       @id @default(autoincrement())
-  title       String
-  content     String
-  published   Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        Int       @id @default(autoincrement())
+  title     String
+  content   String    @db.LongText
+  category  String
+  date      DateTime  @default(now())
+  imageUrl  String?
+  status    String    @default("rascunho")
+  views     Int       @default(0)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  images    NewsImg[]
+
+  @@map("news")
 }
 
 model Admin {
@@ -39,25 +34,30 @@ model Admin {
   @@map("admins")
 }
 
-model NewsImg {
-  id      Int   @id @default(autoincrement())
-  newsId  Int
-  imgId   Int
-
-}
-
-model Info {
-  id          Int       @id @default(autoincrement())
+model info {
+  id          Int      @id @default(autoincrement())
   title       String
   description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
 }
 
-
-model InfoImg {
-  id     Int  @id @default(autoincrement())
+model infoimg {
+  id     Int @id @default(autoincrement())
   infoId Int
   imgId  Int
+}
+
+model NewsImg {
+  id        Int      @id @default(autoincrement())
+  newsId    Int
+  altText   String?
+  base64    String?  @db.LongText
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  url       String?
+  news      News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+
+  @@index([newsId], name: "news_img_newsId_fkey")
+  @@map("news_img")
 }

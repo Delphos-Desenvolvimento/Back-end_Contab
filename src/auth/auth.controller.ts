@@ -1,6 +1,7 @@
 import { Controller, Post, Body, UseGuards, Request, HttpCode, HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -8,11 +9,8 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() credentials: { email?: string; password?: string }) {
-    if (!credentials?.email || !credentials?.password) {
-      throw new UnauthorizedException('Email and password are required');
-    }
-    return this.authService.login(credentials.email, credentials.password);
+  async login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
   }
 
   @Post('register')
