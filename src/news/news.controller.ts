@@ -11,7 +11,8 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { NewsService } from './news.service';
@@ -35,7 +36,7 @@ export class NewsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @UseInterceptors(FilesInterceptor('images'))
+  @UseInterceptors(AnyFilesInterceptor({ storage: memoryStorage() }))
   @ApiConsumes('multipart/form-data')
   create(
     @UploadedFiles() files: Express.Multer.File[] = [],
@@ -60,7 +61,7 @@ export class NewsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @UseInterceptors(FilesInterceptor('images'))
+  @UseInterceptors(AnyFilesInterceptor({ storage: memoryStorage() }))
   @ApiConsumes('multipart/form-data')
   update(
     @Param('id', ParseIntPipe) id: number,

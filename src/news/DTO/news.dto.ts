@@ -4,7 +4,7 @@ import { Transform } from 'class-transformer';
 
 export enum NewsStatus {
   DRAFT = 'rascunho',
-  PUBLISHED = 'publicado',
+  PUBLISHED = 'publicada',
   ARCHIVED = 'arquivado'
 }
 
@@ -30,14 +30,14 @@ export class CreateNewsDto {
   @IsNotEmpty()
   category: string;
 
-  @ApiProperty({ 
-    description: 'URL of the main image (optional)',
+  @ApiProperty({
+    description: 'Primary base64 image string for banner',
     required: false,
-    example: 'https://example.com/image.jpg'
+    example: 'data:image/png;base64,iVBORw0KGgo...'
   })
-  @IsString()
   @IsOptional()
-  imageUrl?: string;
+  @IsString()
+  newsimg?: string;
 
   @ApiProperty({ 
     description: 'Status of the news article',
@@ -57,6 +57,16 @@ export class CreateNewsDto {
   @IsOptional()
   @IsArray()
   images?: Express.Multer.File[];
+
+  @ApiProperty({
+    description: 'Array of base64 image strings',
+    required: false,
+    type: 'array',
+    items: { type: 'string' },
+  })
+  @IsOptional()
+  @IsArray()
+  imagesBase64?: string[];
 }
 
 export class UpdateNewsDto extends PartialType(CreateNewsDto) {
@@ -69,6 +79,16 @@ export class UpdateNewsDto extends PartialType(CreateNewsDto) {
   @IsOptional()
   @IsArray()
   images?: Express.Multer.File[];
+
+  @ApiProperty({
+    description: 'Array of base64 image strings to upload',
+    required: false,
+    type: 'array',
+    items: { type: 'string' },
+  })
+  @IsOptional()
+  @IsArray()
+  imagesBase64?: string[];
 
   @ApiProperty({ 
     description: 'Array of image IDs to delete',
@@ -130,14 +150,14 @@ export class NewsResponseDto {
       type: 'object',
       properties: {
         id: { type: 'number', example: 1 },
-        url: { type: 'string', example: 'https://example.com/image.jpg' },
+        base64: { type: 'string', example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ...' },
         altText: { type: 'string', example: 'Image description' }
       }
     }
   })
   images: Array<{
     id: number;
-    url: string;
+    base64: string;
     altText?: string;
   }>;
 
