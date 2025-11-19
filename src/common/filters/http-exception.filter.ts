@@ -1,4 +1,10 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AppError } from '../errors/app.error';
 
@@ -25,25 +31,27 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ...exception.toJSON(),
         path: request.url,
       };
-    } 
+    }
     // Handle NestJS HttpException
     else if (exception instanceof HttpException) {
       status = exception.getStatus();
       const response = exception.getResponse();
-      
+
       errorResponse = {
         ...errorResponse,
         statusCode: status,
         ...(typeof response === 'string' ? { message: response } : response),
       };
-    } 
+    }
     // Handle other errors
     else if (exception instanceof Error) {
       errorResponse = {
         ...errorResponse,
         message: exception.message,
         name: exception.name,
-        ...(process.env.NODE_ENV === 'development' && { stack: exception.stack }),
+        ...(process.env.NODE_ENV === 'development' && {
+          stack: exception.stack,
+        }),
       };
     }
 

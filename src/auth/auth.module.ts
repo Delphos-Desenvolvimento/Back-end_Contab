@@ -24,7 +24,7 @@ import { JwtStrategy } from './jwt.strategy';
     }),
   ],
   providers: [
-    AuthService, 
+    AuthService,
     JwtStrategy,
     {
       provide: ConfigService,

@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, NotFoundException, Logger } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 
@@ -29,14 +34,18 @@ type AdminWithRelations = {
 export class AdminService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(data: { user: string; password: string; role?: string }): Promise<AdminWithRelations> {
+  async create(data: {
+    user: string;
+    password: string;
+    role?: string;
+  }): Promise<AdminWithRelations> {
     logger.log(`Creating new admin user: ${data.user}`);
-    
+
     // Check if user already exists
     const existingUser = await this.prismaService.admin.findFirst({
-      where: { 
-        user: data.user.toLowerCase()
-      }
+      where: {
+        user: data.user.toLowerCase(),
+      },
     });
 
     if (existingUser) {
@@ -46,29 +55,28 @@ export class AdminService {
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(data.password, 10);
-    
+
     // Prepare user data
     const userData: AdminCreateInput = {
       user: data.user.toLowerCase(),
       password: hashedPassword,
       role: data.role || 'admin',
     };
-    
+
     // Create the user
     try {
-const newUser = await this.prismaService.admin.create({
+      const newUser = await this.prismaService.admin.create({
         data: userData,
         select: {
           id: true,
           user: true,
           role: true,
-          createdAt: true
-        }
+          createdAt: true,
+        },
       });
-      
+
       logger.log(`User ${data.user} created successfully`);
       return newUser;
-      
     } catch (error) {
       logger.error(`Error creating user: ${error.message}`, error.stack);
       throw error;
@@ -87,8 +95,8 @@ const newUser = await this.prismaService.admin.create({
           updatedAt: true,
         },
         orderBy: {
-          createdAt: 'desc'
-        }
+          createdAt: 'desc',
+        },
       });
       return users;
     } catch (error) {
@@ -118,12 +126,15 @@ const newUser = await this.prismaService.admin.create({
     return user;
   }
 
-  async update(id: number, data: { user?: string; password?: string; role?: string }): Promise<AdminWithRelations> {
+  async update(
+    id: number,
+    data: { user?: string; password?: string; role?: string },
+  ): Promise<AdminWithRelations> {
     logger.log(`Updating admin with ID: ${id}`);
-    
+
     // Check if user exists
     const existingUser = await this.prismaService.admin.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!existingUser) {
@@ -133,7 +144,7 @@ const newUser = await this.prismaService.admin.create({
 
     // Prepare update data
     const updateData: AdminUpdateInput = {};
-    
+
     if (data.user && data.user !== existingUser.user) {
       // Check if new username is already taken (case-insensitive)
       const userExists = await this.findByUsername(data.user);
@@ -168,13 +179,12 @@ const newUser = await this.prismaService.admin.create({
           user: true,
           role: true,
           updatedAt: true,
-          createdAt: true
-        }
+          createdAt: true,
+        },
       });
 
       logger.log(`Admin with ID ${id} updated successfully`);
       return updatedUser;
-      
     } catch (error) {
       logger.error(`Error updating admin: ${error.message}`, error.stack);
       throw error;
@@ -183,12 +193,12 @@ const newUser = await this.prismaService.admin.create({
 
   async remove(id: number): Promise<void> {
     logger.log(`Removing admin with ID: ${id}`);
-    
+
     try {
       // First check if user exists
       const existingUser = await this.prismaService.admin.findUnique({
         where: { id },
-        select: { id: true }
+        select: { id: true },
       });
 
       if (!existingUser) {
@@ -198,25 +208,27 @@ const newUser = await this.prismaService.admin.create({
 
       // Delete the user
       await this.prismaService.admin.delete({
-        where: { id }
+        where: { id },
       });
 
       logger.log(`Admin with ID ${id} removed successfully`);
       return;
-      
     } catch (error) {
       logger.error(`Error removing admin: ${error.message}`, error.stack);
       throw error;
     }
   }
 
-  async verifyUserCredentials(identifier: string, password: string): Promise<{
+  async verifyUserCredentials(
+    identifier: string,
+    password: string,
+  ): Promise<{
     id: number;
     user: string;
     role: string;
   } | null> {
     try {
-const admin = await this.prismaService.admin.findFirst({
+      const admin = await this.prismaService.admin.findFirst({
         where: {
           user: identifier,
         },
@@ -229,12 +241,14 @@ const admin = await this.prismaService.admin.findFirst({
 
       logger.debug(`Found admin: ${admin.user} (ID: ${admin.id})`);
       const isPasswordValid = await bcrypt.compare(password, admin.password);
-      logger.debug(`Password ${isPasswordValid ? 'matches' : 'does not match'}`);
-      
+      logger.debug(
+        `Password ${isPasswordValid ? 'matches' : 'does not match'}`,
+      );
+
       if (!isPasswordValid) {
         return null;
       }
-      
+
       return {
         id: admin.id,
         user: admin.user,
@@ -246,37 +260,41 @@ const admin = await this.prismaService.admin.findFirst({
     }
   }
 
-  async findByUsername(username: string): Promise<{ id: number; user: string; role: string } | null> {
+  async findByUsername(
+    username: string,
+  ): Promise<{ id: number; user: string; role: string } | null> {
     if (!username) {
       logger.warn('No username provided for search');
       return null;
     }
 
     logger.debug(`Looking for admin with username: '${username}'`);
-    
+
     try {
       // Use Prisma's findFirst with select to only get the fields we need
-const admin = await this.prismaService.admin.findFirst({
+      const admin = await this.prismaService.admin.findFirst({
         where: {
           user: {
-            equals: username.toLowerCase()
-          }
+            equals: username.toLowerCase(),
+          },
         },
         select: {
           id: true,
           user: true,
-          role: true
-        }
+          role: true,
+        },
       });
-      
+
       if (admin) {
         // Ensure role has a default value if not set
         const adminWithDefaultRole = {
           ...admin,
-          role: admin.role || 'admin'
+          role: admin.role || 'admin',
         };
-        
-        logger.debug(`Admin found: ${adminWithDefaultRole.user} (ID: ${adminWithDefaultRole.id}, Role: ${adminWithDefaultRole.role})`);
+
+        logger.debug(
+          `Admin found: ${adminWithDefaultRole.user} (ID: ${adminWithDefaultRole.id}, Role: ${adminWithDefaultRole.role})`,
+        );
         return adminWithDefaultRole;
       } else {
         logger.debug(`Admin not found with username: ${username}`);

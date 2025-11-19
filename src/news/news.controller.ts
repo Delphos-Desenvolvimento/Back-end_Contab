@@ -80,4 +80,18 @@ export class NewsController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.newsService.remove(id);
   }
+
+  @Patch(':id/archive')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  archive(@Param('id', ParseIntPipe) id: number) {
+    return this.newsService.archive(id);
+  }
+
+  @Patch(':id/restore')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  restore(@Param('id', ParseIntPipe) id: number) {
+    return this.newsService.restore(id);
+  }
 }

@@ -1,10 +1,10 @@
-import { 
-  Injectable, 
-  UnauthorizedException, 
-  ConflictException, 
-  Logger, 
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  Logger,
   BadRequestException,
-  NotFoundException
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -32,12 +32,15 @@ export class AuthService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<AdminUser | null> {
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<AdminUser | null> {
     this.logger.log(`Validating user: ${email}`);
-    
+
     try {
       if (!email) {
         throw new Error('Email is required');
@@ -46,7 +49,7 @@ export class AuthService {
       // Find user with case-insensitive email search
       const user = await this.prisma.admin.findFirst({
         where: {
-          user: email.toLowerCase()
+          user: email.toLowerCase(),
         },
         select: {
           id: true,
@@ -54,10 +57,10 @@ export class AuthService {
           password: true,
           role: true,
           createdAt: true,
-          updatedAt: true
-        }
+          updatedAt: true,
+        },
       });
-      
+
       if (!user) {
         this.logger.warn(`User not found: ${email}`);
         return null;
@@ -65,7 +68,7 @@ export class AuthService {
 
       // Verify password
       const isPasswordValid = await bcrypt.compare(password, user.password);
-      
+
       if (!isPasswordValid) {
         this.logger.warn(`Invalid password for user: ${email}`);
         return null;
@@ -75,7 +78,6 @@ export class AuthService {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _, ...result } = user;
       return result as AdminUser;
-      
     } catch (error) {
       this.logger.error(`Error validating user: ${error.message}`, error.stack);
       throw new UnauthorizedException('Authentication failed');
@@ -84,18 +86,18 @@ export class AuthService {
 
   async login(loginDto: LoginDto): Promise<LoginResponse> {
     const { email, password } = loginDto;
-    
+
     try {
       const user = await this.validateUser(email, password);
-      
+
       if (!user) {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      const payload = { 
-        sub: user.id, 
-        email: user.user, 
-        role: user.role 
+      const payload = {
+        sub: user.id,
+        email: user.user,
+        role: user.role,
       };
 
       return {
@@ -105,8 +107,8 @@ export class AuthService {
           user: user.user,
           role: user.role,
           createdAt: user.createdAt,
-          updatedAt: user.updatedAt
-        }
+          updatedAt: user.updatedAt,
+        },
       };
     } catch (error) {
       this.logger.error(`Login error: ${error.message}`, error.stack);
@@ -130,8 +132,8 @@ export class AuthService {
       // Check if user already exists (case-insensitive)
       const existingUser = await this.prisma.admin.findFirst({
         where: {
-          user: sanitizedEmail
-        }
+          user: sanitizedEmail,
+        },
       });
 
       if (existingUser) {
@@ -148,24 +150,23 @@ export class AuthService {
       }
 
       // Create new user with the correct fields
-const newUser = await this.prisma.admin.create({
+      const newUser = await this.prisma.admin.create({
         data: {
           user: sanitizedEmail,
           password: hashedPassword,
-          role: sanitizedRole
+          role: sanitizedRole,
         },
         select: {
           id: true,
           user: true,
           role: true,
           createdAt: true,
-          updatedAt: true
-        }
+          updatedAt: true,
+        },
       });
 
       this.logger.log(`Created new user: ${sanitizedEmail}`);
       return newUser;
-      
     } catch (error) {
       this.logger.error(`Error creating user: ${error.message}`, error.stack);
       throw error;
@@ -174,12 +175,12 @@ const newUser = await this.prisma.admin.create({
 
   async getAllUsers() {
     try {
-const allUsers = await this.prisma.admin.findMany({
+      const allUsers = await this.prisma.admin.findMany({
         select: {
           id: true,
           user: true,
-          role: true
-        }
+          role: true,
+        },
       });
       return allUsers;
     } catch (error) {

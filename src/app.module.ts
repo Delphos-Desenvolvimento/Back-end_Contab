@@ -7,12 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { NewsModule } from './news/news.module';
 
 @Module({
-  imports: [
-    PrismaModule, 
-    AdminModule, 
-    AuthModule,
-    NewsModule
-  ],
+  imports: [PrismaModule, AdminModule, AuthModule, NewsModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -17,13 +17,13 @@ export class AppError extends Error {
   public readonly cause?: Error;
 
   constructor(options: ErrorOptions) {
-    const { 
-      message, 
+    const {
+      message,
       name = 'AppError',
       statusCode = HttpStatus.INTERNAL_SERVER_ERROR,
       errorCode = 'INTERNAL_ERROR',
       details = {},
-      cause 
+      cause,
     } = options;
 
     super(message);
@@ -48,7 +48,7 @@ export class AppError extends Error {
       message: this.message,
       details: this.details,
       timestamp: this.timestamp.toISOString(),
-      ...(this.cause && { cause: this.cause.message })
+      ...(this.cause && { cause: this.cause.message }),
     };
   }
 }

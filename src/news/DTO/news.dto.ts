@@ -1,30 +1,40 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsArray, IsInt, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsArray,
+  IsInt,
+  IsEnum,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export enum NewsStatus {
   DRAFT = 'rascunho',
   PUBLISHED = 'publicada',
-  ARCHIVED = 'arquivado'
+  ARCHIVED = 'arquivado',
 }
 
 export class CreateNewsDto {
-  @ApiProperty({ description: 'Title of the news article', example: 'Breaking News' })
+  @ApiProperty({
+    description: 'Title of the news article',
+    example: 'Breaking News',
+  })
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ 
-    description: 'Content of the news article', 
-    example: 'This is the content of the news article...' 
+  @ApiProperty({
+    description: 'Content of the news article',
+    example: 'This is the content of the news article...',
   })
   @IsString()
   @IsNotEmpty()
   content: string;
 
-  @ApiProperty({ 
-    description: 'Category of the news article', 
-    example: 'politics' 
+  @ApiProperty({
+    description: 'Category of the news article',
+    example: 'politics',
   })
   @IsString()
   @IsNotEmpty()
@@ -33,16 +43,16 @@ export class CreateNewsDto {
   @ApiProperty({
     description: 'Primary base64 image string for banner',
     required: false,
-    example: 'data:image/png;base64,iVBORw0KGgo...'
+    example: 'data:image/png;base64,iVBORw0KGgo...',
   })
   @IsOptional()
   @IsString()
   newsimg?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Status of the news article',
     enum: NewsStatus,
-    default: NewsStatus.DRAFT
+    default: NewsStatus.DRAFT,
   })
   @IsEnum(NewsStatus)
   @IsOptional()
@@ -52,7 +62,7 @@ export class CreateNewsDto {
     description: 'Array of image files',
     type: 'array',
     items: { type: 'string', format: 'binary' },
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsArray()
@@ -70,11 +80,11 @@ export class CreateNewsDto {
 }
 
 export class UpdateNewsDto extends PartialType(CreateNewsDto) {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Array of image files to upload',
     type: 'array',
     items: { type: 'string', format: 'binary' },
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsArray()
@@ -90,10 +100,10 @@ export class UpdateNewsDto extends PartialType(CreateNewsDto) {
   @IsArray()
   imagesBase64?: string[];
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Array of image IDs to delete',
     type: [Number],
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsArray()
@@ -103,20 +113,20 @@ export class UpdateNewsDto extends PartialType(CreateNewsDto) {
 }
 
 export class DeleteNewsDto {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Array of news IDs to delete',
     type: [Number],
-    example: [1, 2, 3]
+    example: [1, 2, 3],
   })
   @IsArray()
   @IsInt({ each: true })
   @Transform(({ value }) => value.map(Number))
   ids: number[];
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Whether to delete associated images from storage',
     default: true,
-    required: false
+    required: false,
   })
   @IsOptional()
   deleteImages?: boolean;
@@ -136,24 +146,27 @@ export class NewsResponseDto {
   @ApiProperty({ description: 'News category', example: 'politics' })
   category: string;
 
-  @ApiProperty({ 
-    description: 'News status', 
+  @ApiProperty({
+    description: 'News status',
     enum: NewsStatus,
-    example: NewsStatus.DRAFT
+    example: NewsStatus.DRAFT,
   })
   status: NewsStatus;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'News images',
     type: 'array',
     items: {
       type: 'object',
       properties: {
         id: { type: 'number', example: 1 },
-        base64: { type: 'string', example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ...' },
-        altText: { type: 'string', example: 'Image description' }
-      }
-    }
+        base64: {
+          type: 'string',
+          example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ...',
+        },
+        altText: { type: 'string', example: 'Image description' },
+      },
+    },
   })
   images: Array<{
     id: number;

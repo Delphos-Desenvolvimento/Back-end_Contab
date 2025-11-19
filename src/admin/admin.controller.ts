@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, UnauthorizedException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AdminService } from './admin.service';
 
 @Controller('admin')
