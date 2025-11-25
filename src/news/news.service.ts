@@ -10,7 +10,7 @@ type MulterFile = {
 
 @Injectable()
 export class NewsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(createNewsDto: CreateNewsDto) {
     const { images, imagesBase64, newsimg, ...newsData } = createNewsDto;
@@ -94,8 +94,9 @@ export class NewsService {
     });
   }
 
-  async findAll() {
+  async findAll(status?: string) {
     return this.prisma.news.findMany({
+      where: status ? { status } : undefined,
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -145,13 +146,23 @@ export class NewsService {
       throw new NotFoundException(`News with ID ${id} not found`);
     }
 
-    // Increment view count
-    await this.prisma.news.update({
-      where: { id },
-      data: { views: { increment: 1 } },
-    });
+    // Calculate view count from EventLog
+    const viewCount = await this.getViewCount(id);
 
-    return news;
+    return {
+      ...news,
+      views: viewCount,
+    };
+  }
+
+  async getViewCount(newsId: number): Promise<number> {
+    const count = await this.prisma.eventLog.count({
+      where: {
+        newsId,
+        type: 'news_view',
+      },
+    });
+    return count;
   }
 
   async update(id: number, updateNewsDto: UpdateNewsDto) {
@@ -244,7 +255,7 @@ export class NewsService {
   async remove(id: number) {
     // Check if news exists
     await this.findOne(id);
-    
+
     return this.prisma.news.delete({
       where: { id },
     });

@@ -10,6 +10,7 @@ import {
   UploadedFiles,
   ParseIntPipe,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
@@ -19,6 +20,7 @@ import { NewsService } from './news.service';
 import { CreateNewsDto } from './DTO/news.dto';
 import { UpdateNewsDto } from './DTO/news.dto';
 import { Express } from 'express';
+import { NewsViewInterceptor } from './news-view.interceptor';
 
 declare global {
   namespace Express {
@@ -31,7 +33,7 @@ declare global {
 @ApiTags('news')
 @Controller('news')
 export class NewsController {
-  constructor(private readonly newsService: NewsService) {}
+  constructor(private readonly newsService: NewsService) { }
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -49,12 +51,14 @@ export class NewsController {
   }
 
   @Get()
-  findAll() {
-    return this.newsService.findAll();
+  findAll(@Query('status') status?: string) {
+    return this.newsService.findAll(status);
   }
 
   @Get(':id')
+  @UseInterceptors(NewsViewInterceptor)
   findOne(@Param('id', ParseIntPipe) id: number) {
+    console.log(`[NewsController] GET /news/${id} hit`);
     return this.newsService.findOne(id);
   }
 

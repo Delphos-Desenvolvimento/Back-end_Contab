@@ -12,6 +12,7 @@ async function bootstrap() {
 
   // Get environment variables with defaults
   const port = parseInt(process.env.PORT || '3000', 10);
+  const host = process.env.HOST || '0.0.0.0';
   const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.0.102:5173';
   const nodeEnv = process.env.NODE_ENV || 'development';
 
@@ -22,45 +23,37 @@ async function bootstrap() {
   // CORS configuration
   const allowedOrigins = [
     'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'http://192.168.0.102:5173',
-    'http://192.168.0.126:5173',
-  ];
+    'http://localhost:3000',
+    'http://contab.mcolins.com.br',
+    'http://www.contab.mcolins.com.br',
+    'http://162.240.236.4:5173',
+    frontendUrl,
+  ].filter(Boolean);
 
-  app.use((req, res, next) => {
-    const origin = req.headers.origin;
-
-    // Only allow requests from our frontend
-    if (origin && allowedOrigins.includes(origin)) {
-      res.header('Access-Control-Allow-Origin', origin);
-    }
-
-    res.header(
-      'Access-Control-Allow-Methods',
-      'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-    );
-    res.header(
-      'Access-Control-Allow-Headers',
-      'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-access-token',
-    );
-    res.header('Access-Control-Allow-Credentials', 'true');
-
-    // Handle preflight requests
-    if (req.method === 'OPTIONS') {
-      return res.status(200).end();
-    }
-
-    next();
+  app.enableCors({
+    origin: allowedOrigins,
+    methods: 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+    allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-access-token, x-session-id',
+    credentials: true,
   });
 
   // Log CORS configuration
   logger.log('CORS is enabled for origins:', allowedOrigins);
 
   // Start the application
-  await app.listen(port, '0.0.0.0'); // Listen on all network interfaces
+  try {
+    await app.listen(port, host);
+  } catch (e: any) {
+    try {
+      await app.listen(port);
+      logger.error(`listen ${host}:${port} failed, fallback to 0.0.0.0:${port}`);
+    } catch (e2: any) {
+      throw e2;
+    }
+  }
 
   logger.log(`Application is running in ${nodeEnv} mode`);
-  logger.log(`Listening on port ${port}`);
+  logger.log(`Listening on ${host}:${port}`);
   logger.log(`Frontend URL: ${frontendUrl}`);
   logger.log('CORS is enabled for all origins in development mode');
 }
