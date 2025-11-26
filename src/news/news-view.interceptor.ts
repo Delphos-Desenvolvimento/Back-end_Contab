@@ -61,16 +61,22 @@ export class NewsViewInterceptor implements NestInterceptor {
         if (!existingView && !isNaN(newsId)) {
             console.log(`[NewsViewInterceptor] Creating new view event for newsId: ${newsId}`);
             try {
-                await this.prisma.eventLog.create({
-                    data: {
-                        type: 'news_view',
-                        newsId,
-                        userAgent: sessionId,
-                        ip: request.ip,
-                        path: request.url,
-                    },
-                });
-                console.log(`[NewsViewInterceptor] View event created successfully`);
+                await this.prisma.$transaction([
+                    this.prisma.eventLog.create({
+                        data: {
+                            type: 'news_view',
+                            newsId,
+                            userAgent: sessionId,
+                            ip: request.ip,
+                            path: request.url,
+                        },
+                    }),
+                    this.prisma.news.update({
+                        where: { id: newsId },
+                        data: { views: { increment: 1 } },
+                    }),
+                ]);
+                console.log(`[NewsViewInterceptor] View event created and counter incremented successfully`);
             } catch (error) {
                 console.error(`[NewsViewInterceptor] Error creating view event:`, error);
             }

@@ -197,36 +197,45 @@ export class NewsService {
       select: { id: true },
     });
 
-    await this.prisma.newsImg.deleteMany({ where: { newsId: id } });
+    const hasNewImages =
+      (Array.isArray(images) && images.length > 0) ||
+      (Array.isArray(imagesBase64) && imagesBase64.length > 0) ||
+      (typeof newsimg === 'string' && newsimg.length > 0);
 
-    const fileBase64sU = (Array.isArray(images) ? images : [])
-      .map((img: MulterFile) =>
-        img?.buffer ? img.buffer.toString('base64') : undefined,
-      )
-      .filter((b): b is string => !!b);
+    console.log('[NewsService] update:', { id, hasNewImages, imagesLen: images?.length, imagesBase64Len: imagesBase64?.length, newsimgLen: newsimg?.length });
 
-    const arrayBase64sU = (
-      Array.isArray(imagesBase64) ? imagesBase64 : []
-    ).filter((b): b is string => typeof b === 'string' && b.length > 0);
+    if (hasNewImages) {
+      await this.prisma.newsImg.deleteMany({ where: { newsId: id } });
 
-    const bannerBase64U =
-      typeof newsimg === 'string' && newsimg.length > 0 ? newsimg : undefined;
+      const fileBase64sU = (Array.isArray(images) ? images : [])
+        .map((img: MulterFile) =>
+          img?.buffer ? img.buffer.toString('base64') : undefined,
+        )
+        .filter((b): b is string => !!b);
 
-    const toInsertU = [
-      ...fileBase64sU.map((b64, idx) => ({
-        newsId: id,
-        base64: b64,
-        altText:
-          Array.isArray(images) && (images[idx] as MulterFile)?.originalname
-            ? (images[idx] as MulterFile).originalname
-            : undefined,
-      })),
-      ...arrayBase64sU.map((b64) => ({ newsId: id, base64: b64 })),
-      ...(bannerBase64U ? [{ newsId: id, base64: bannerBase64U }] : []),
-    ];
+      const arrayBase64sU = (
+        Array.isArray(imagesBase64) ? imagesBase64 : []
+      ).filter((b): b is string => typeof b === 'string' && b.length > 0);
 
-    if (toInsertU.length > 0) {
-      await this.prisma.newsImg.createMany({ data: toInsertU });
+      const bannerBase64U =
+        typeof newsimg === 'string' && newsimg.length > 0 ? newsimg : undefined;
+
+      const toInsertU = [
+        ...fileBase64sU.map((b64, idx) => ({
+          newsId: id,
+          base64: b64,
+          altText:
+            Array.isArray(images) && (images[idx] as MulterFile)?.originalname
+              ? (images[idx] as MulterFile).originalname
+              : undefined,
+        })),
+        ...arrayBase64sU.map((b64) => ({ newsId: id, base64: b64 })),
+        ...(bannerBase64U ? [{ newsId: id, base64: bannerBase64U }] : []),
+      ];
+
+      if (toInsertU.length > 0) {
+        await this.prisma.newsImg.createMany({ data: toInsertU });
+      }
     }
 
     return this.prisma.news.findUnique({
