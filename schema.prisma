@@ -72,3 +72,83 @@ model EventLog {
 
   @@map("event_log")
 }
+
+model Partner {
+  id           Int      @id @default(autoincrement())
+  name         String
+  logoBase64   String   @db.LongText
+  displayOrder Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("partners")
+}
+
+model AboutSection {
+  id                  Int      @id @default(autoincrement())
+  overline            String   @default("Sobre Nós")
+  title               String   @db.Text
+  subtitle            String   @db.Text
+  solutionsOverline   String?  @map("solutions_overline")
+  solutionsTitle      String?  @db.Text @map("solutions_title")
+  solutionsSubtitle   String?  @db.Text @map("solutions_subtitle")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("about_section")
+}
+
+model Statistic {
+  id        Int      @id @default(autoincrement())
+  value     String
+  label     String
+  icon      String   // Nome do ícone lucide-react ou URL base64
+  iconType  String   @default("lucide") // "lucide" ou "image"
+  order     Int      @default(0)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("statistics")
+}
+
+model Solution {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String   @db.Text
+  icon        String   // Nome do ícone lucide-react ou URL base64
+  iconType    String   @default("lucide") // "lucide" ou "image"
+  order       Int      @default(0)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("solutions")
+}
+
+model TeamPage {
+  id          Int      @id @default(autoincrement())
+  title       String   @default("Nossa Equipe")
+  content     String   @db.LongText // Rich text HTML content
+  isPublished Boolean  @default(false) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("team_page")
+}
+
+
+model Link {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(255)
+  url         String   @db.VarChar(500)
+  description String?  @db.Text
+  imageBase64 String?  @db.LongText
+  order       Int      @default(0)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("links")
+}

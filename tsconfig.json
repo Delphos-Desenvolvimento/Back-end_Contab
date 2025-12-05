@@ -24,8 +24,13 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "types": ["node", "@nestjs/config", "@types/bcrypt", "@prisma/client"]
+    "types": [
+      "node",
+      "@nestjs/config",
+      "@types/bcrypt",
+      "@prisma/client"
+    ]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "include": ["src/**/*.ts", "test/**/*.ts", "migrations/**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts"]
 }
