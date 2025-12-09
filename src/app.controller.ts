@@ -22,9 +22,13 @@ export class AppController {
   @Post('test-cors')
   testCorsPost(@Req() req: Request, @Res() res: Response) {
     console.log('Test CORS POST received:', req.body);
+    const receivedBody =
+      typeof req.body === 'object' && req.body !== null
+        ? (req.body as Record<string, unknown>)
+        : String(req.body);
     return res.json({
       message: 'CORS POST is working!',
-      receivedBody: req.body,
+      receivedBody,
       timestamp: new Date().toISOString(),
     });
   }

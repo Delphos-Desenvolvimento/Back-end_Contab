@@ -5,14 +5,14 @@ export interface ErrorOptions {
   name?: string;
   statusCode?: number;
   errorCode?: string;
-  details?: any;
+  details?: unknown;
   cause?: Error;
 }
 
 export class AppError extends Error {
   public readonly statusCode: number;
   public readonly errorCode: string;
-  public readonly details: any;
+  public readonly details: unknown;
   public readonly timestamp: Date;
   public readonly cause?: Error;
 

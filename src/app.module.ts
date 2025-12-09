@@ -12,6 +12,8 @@ import { ContentModule } from './content/content.module';
 import { TeamModule } from './team/team.module';
 import { ConfigModule } from '@nestjs/config';
 import { LinkModule } from './link/link.module';
+import { CommentsModule } from './comments/comments.module';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -25,9 +27,11 @@ import { LinkModule } from './link/link.module';
     PartnersModule,
     ContentModule,
     TeamModule,
-    LinkModule
+    LinkModule,
+    CommentsModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

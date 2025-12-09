@@ -10,29 +10,28 @@ type MulterFile = {
 
 @Injectable()
 export class NewsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(createNewsDto: CreateNewsDto) {
     const { images, imagesBase64, newsimg, ...newsData } = createNewsDto;
 
-    const data: any = { ...newsData };
-
-    if (data.date !== undefined) {
-      const val = data.date;
-      if (typeof val === 'string') {
-        const s = val.trim();
-        if (!s) {
-          delete data.date;
-        } else {
-          const d = new Date(s);
-          if (Number.isNaN(d.getTime())) {
-            delete data.date;
-          } else {
-            data.date = d;
-          }
-        }
-      } else if (!(val instanceof Date)) {
-        delete data.date;
+    const data: {
+      title: string;
+      content: string;
+      category: string;
+      status?: string;
+      date?: Date;
+    } = {
+      title: newsData.title,
+      content: newsData.content,
+      category: newsData.category,
+    };
+    if (newsData.status) data.status = newsData.status;
+    if (newsData.date) {
+      const s = newsData.date.trim();
+      if (s) {
+        const d = new Date(s);
+        if (!Number.isNaN(d.getTime())) data.date = d;
       }
     }
 
@@ -170,24 +169,22 @@ export class NewsService {
 
     await this.findOne(id);
 
-    const data: any = { ...updateData };
-
-    if (data.date !== undefined) {
-      const val = data.date;
-      if (typeof val === 'string') {
-        const s = val.trim();
-        if (!s) {
-          delete data.date;
-        } else {
-          const d = new Date(s);
-          if (Number.isNaN(d.getTime())) {
-            delete data.date;
-          } else {
-            data.date = d;
-          }
-        }
-      } else if (!(val instanceof Date)) {
-        delete data.date;
+    const data: {
+      title?: string;
+      content?: string;
+      category?: string;
+      status?: string;
+      date?: Date;
+    } = {};
+    if (updateData.title) data.title = updateData.title;
+    if (updateData.content) data.content = updateData.content;
+    if (updateData.category) data.category = updateData.category;
+    if (updateData.status) data.status = updateData.status;
+    if (updateData.date) {
+      const s = updateData.date.trim();
+      if (s) {
+        const d = new Date(s);
+        if (!Number.isNaN(d.getTime())) data.date = d;
       }
     }
 
@@ -202,7 +199,13 @@ export class NewsService {
       (Array.isArray(imagesBase64) && imagesBase64.length > 0) ||
       (typeof newsimg === 'string' && newsimg.length > 0);
 
-    console.log('[NewsService] update:', { id, hasNewImages, imagesLen: images?.length, imagesBase64Len: imagesBase64?.length, newsimgLen: newsimg?.length });
+    console.log('[NewsService] update:', {
+      id,
+      hasNewImages,
+      imagesLen: images?.length,
+      imagesBase64Len: imagesBase64?.length,
+      newsimgLen: newsimg?.length,
+    });
 
     if (hasNewImages) {
       await this.prisma.newsImg.deleteMany({ where: { newsId: id } });

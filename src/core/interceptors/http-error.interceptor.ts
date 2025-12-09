@@ -11,23 +11,29 @@ import { catchError } from 'rxjs/operators';
 
 @Injectable()
 export class HttpErrorInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     return next.handle().pipe(
-      catchError((error) => {
-        console.error('Error from error interceptor:', error);
+      catchError((error: unknown) => {
+        const errObj =
+          typeof error === 'object' && error !== null
+            ? (error as Record<string, unknown>)
+            : {};
 
-        // Handle different types of errors
-        if (error.name === 'ValidationError') {
+        const name = typeof errObj['name'] === 'string' ? errObj['name'] : '';
+        if (name === 'ValidationError') {
+          const errors = Array.isArray(errObj['errors'])
+            ? (errObj['errors'] as unknown[])
+            : [];
           return throwError(
             () =>
               new HttpException(
-                { message: 'Validation failed', errors: error.errors },
+                { message: 'Validation failed', errors },
                 HttpStatus.BAD_REQUEST,
               ),
           );
         }
 
-        if (error.name === 'UnauthorizedError') {
+        if (name === 'UnauthorizedError') {
           return throwError(
             () =>
               new HttpException(
@@ -37,9 +43,16 @@ export class HttpErrorInterceptor implements NestInterceptor {
           );
         }
 
-        // Default error response
-        const status = error.status || HttpStatus.INTERNAL_SERVER_ERROR;
-        const message = error.message || 'Internal server error';
+        const status =
+          error instanceof HttpException
+            ? error.getStatus()
+            : typeof errObj['status'] === 'number'
+              ? errObj['status']
+              : HttpStatus.INTERNAL_SERVER_ERROR;
+        const message =
+          typeof errObj['message'] === 'string'
+            ? errObj['message']
+            : 'Internal server error';
 
         return throwError(
           () =>

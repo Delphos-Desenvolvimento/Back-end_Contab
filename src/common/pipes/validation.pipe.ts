@@ -1,22 +1,23 @@
+import { PipeTransform, Injectable, ArgumentMetadata } from '@nestjs/common';
 import {
-  PipeTransform,
-  Injectable,
-  ArgumentMetadata,
-  BadRequestException,
-} from '@nestjs/common';
-import { validate } from 'class-validator';
-import { plainToClass } from 'class-transformer';
+  validate,
+  ValidationError as ClassValidationError,
+} from 'class-validator';
+import { plainToInstance } from 'class-transformer';
 import { ValidationError } from '../errors/http.error';
 
+type Constructor<T = unknown> = new (...args: unknown[]) => T;
+
 @Injectable()
-export class ValidationPipe implements PipeTransform<any> {
-  async transform(value: any, { metatype }: ArgumentMetadata) {
+export class ValidationPipe implements PipeTransform<unknown> {
+  async transform(value: unknown, { metatype }: ArgumentMetadata) {
     if (!metatype || !this.toValidate(metatype)) {
       return value;
     }
 
-    const object = plainToClass(metatype, value);
-    const errors = await validate(object, {
+    const object = plainToInstance(metatype as Constructor, value);
+    const toValidateObj: object = object as object;
+    const errors = await validate(toValidateObj, {
       whitelist: true,
       forbidNonWhitelisted: true,
       forbidUnknownValues: true,
@@ -30,19 +31,33 @@ export class ValidationPipe implements PipeTransform<any> {
     return object;
   }
 
-  private toValidate(metatype: Function): boolean {
-    const types: Function[] = [String, Boolean, Number, Array, Object];
-    return !types.includes(metatype);
+  private toValidate(metatype: Constructor): boolean {
+    const primitives: Constructor[] = [
+      String as unknown as Constructor,
+      Boolean as unknown as Constructor,
+      Number as unknown as Constructor,
+      Array as unknown as Constructor,
+      Object as unknown as Constructor,
+    ];
+    return !primitives.includes(metatype);
   }
 
-  private formatErrors(errors: any[]) {
-    return errors.map((error) => ({
-      field: error.property,
-      errors: error.constraints ? Object.values(error.constraints) : [],
-      ...(error.children &&
-        error.children.length > 0 && {
-          children: this.formatErrors(error.children),
-        }),
-    }));
+  private formatErrors(errors: ClassValidationError[]): Array<{
+    field: string;
+    errors: string[];
+    children?: Array<{ field: string; errors: string[] }>;
+  }> {
+    return errors.map((error) => {
+      const errs = error.constraints ? Object.values(error.constraints) : [];
+      const children =
+        error.children && error.children.length > 0
+          ? this.formatErrors(error.children)
+          : undefined;
+      return {
+        field: error.property,
+        errors: errs,
+        ...(children ? { children } : {}),
+      };
+    });
   }
 }

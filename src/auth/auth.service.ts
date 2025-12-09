@@ -3,19 +3,18 @@ import {
   UnauthorizedException,
   ConflictException,
   Logger,
-  BadRequestException,
-  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
+// import { RegisterDto } from './dto/register.dto';
 
 export interface AdminUser {
   id: number;
   user: string;
   role: string;
+  name?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -78,8 +77,15 @@ export class AuthService {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _, ...result } = user;
       return result as AdminUser;
-    } catch (error) {
-      this.logger.error(`Error validating user: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error(
+          `Error validating user: ${error.message}`,
+          error.stack,
+        );
+      } else {
+        this.logger.error('Error validating user');
+      }
       throw new UnauthorizedException('Authentication failed');
     }
   }
@@ -106,12 +112,17 @@ export class AuthService {
           id: user.id,
           user: user.user,
           role: user.role,
+          name: user.name,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         },
       };
-    } catch (error) {
-      this.logger.error(`Login error: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error(`Login error: ${error.message}`, error.stack);
+      } else {
+        this.logger.error('Login error');
+      }
       throw new UnauthorizedException('Authentication failed');
     }
   }
@@ -167,9 +178,13 @@ export class AuthService {
 
       this.logger.log(`Created new user: ${sanitizedEmail}`);
       return newUser;
-    } catch (error) {
-      this.logger.error(`Error creating user: ${error.message}`, error.stack);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error(`Error creating user: ${error.message}`, error.stack);
+        throw error;
+      }
+      this.logger.error('Error creating user');
+      throw new Error('Error creating user');
     }
   }
 
@@ -183,9 +198,16 @@ export class AuthService {
         },
       });
       return allUsers;
-    } catch (error) {
-      this.logger.error(`Error fetching users: ${error.message}`, error.stack);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error(
+          `Error fetching users: ${error.message}`,
+          error.stack,
+        );
+        throw error;
+      }
+      this.logger.error('Error fetching users');
+      throw new Error('Error fetching users');
     }
   }
 }

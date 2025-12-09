@@ -2,7 +2,7 @@ import { HttpStatus } from '@nestjs/common';
 import { AppError } from './app.error';
 
 export class NotFoundError extends AppError {
-  constructor(message = 'Resource not found', details?: any) {
+  constructor(message = 'Resource not found', details?: unknown) {
     super({
       message,
       name: 'NotFoundError',
@@ -14,7 +14,7 @@ export class NotFoundError extends AppError {
 }
 
 export class ValidationError extends AppError {
-  constructor(message = 'Validation failed', details?: any) {
+  constructor(message = 'Validation failed', details?: unknown) {
     super({
       message,
       name: 'ValidationError',
@@ -26,7 +26,7 @@ export class ValidationError extends AppError {
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(message = 'Unauthorized', details?: any) {
+  constructor(message = 'Unauthorized', details?: unknown) {
     super({
       message,
       name: 'UnauthorizedError',
@@ -38,7 +38,7 @@ export class UnauthorizedError extends AppError {
 }
 
 export class ForbiddenError extends AppError {
-  constructor(message = 'Forbidden', details?: any) {
+  constructor(message = 'Forbidden', details?: unknown) {
     super({
       message,
       name: 'ForbiddenError',
@@ -50,7 +50,7 @@ export class ForbiddenError extends AppError {
 }
 
 export class ConflictError extends AppError {
-  constructor(message = 'Conflict', details?: any) {
+  constructor(message = 'Conflict', details?: unknown) {
     super({
       message,
       name: 'ConflictError',
@@ -62,7 +62,7 @@ export class ConflictError extends AppError {
 }
 
 export class RateLimitError extends AppError {
-  constructor(message = 'Too many requests', details?: any) {
+  constructor(message = 'Too many requests', details?: unknown) {
     super({
       message,
       name: 'RateLimitError',
@@ -74,7 +74,7 @@ export class RateLimitError extends AppError {
 }
 
 export class ServiceUnavailableError extends AppError {
-  constructor(message = 'Service unavailable', details?: any) {
+  constructor(message = 'Service unavailable', details?: unknown) {
     super({
       message,
       name: 'ServiceUnavailableError',

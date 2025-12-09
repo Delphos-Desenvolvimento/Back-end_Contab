@@ -15,8 +15,15 @@ export class AnalyticsController {
 
   @Post()
   async track(@Body() body: TrackEventDto, @Req() req: Request) {
-    const ip = req.headers['x-forwarded-for']?.toString() || req.socket.remoteAddress || undefined;
+    const ip =
+      req.headers['x-forwarded-for']?.toString() ||
+      req.socket.remoteAddress ||
+      undefined;
     const userAgent = req.headers['user-agent'] || undefined;
-    return this.analytics.track({ ...body, ip, userAgent: typeof userAgent === 'string' ? userAgent : undefined });
+    return this.analytics.track({
+      ...body,
+      ip,
+      userAgent: typeof userAgent === 'string' ? userAgent : undefined,
+    });
   }
 }

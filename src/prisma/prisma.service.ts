@@ -32,9 +32,13 @@ export class PrismaService
     try {
       await this.$connect();
       this.logger.log('Successfully connected to the database');
-    } catch (error: any) {
-      this.logger.error('Failed to connect to the database', error.stack);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error('Failed to connect to the database', error.stack);
+      } else {
+        this.logger.error('Failed to connect to the database');
+      }
+      throw error as Error;
     }
   }
 
@@ -42,9 +46,13 @@ export class PrismaService
     try {
       await this.$disconnect();
       this.logger.log('Successfully disconnected from the database');
-    } catch (error: any) {
-      this.logger.error('Error disconnecting from the database', error.stack);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error('Error disconnecting from the database', error.stack);
+      } else {
+        this.logger.error('Error disconnecting from the database');
+      }
+      throw error as Error;
     }
   }
 
@@ -54,23 +62,15 @@ export class PrismaService
       throw new Error('Cannot clear database in production');
     }
 
-    const models = Object.keys(this).filter(
-      (key) =>
-        !key.startsWith('_') &&
-        ![
-          '$connect',
-          '$disconnect',
-          '$on',
-          '$transaction',
-          '$use',
-          '$executeRaw',
-          '$queryRaw',
-        ].includes(key) &&
-        typeof this[key]?.deleteMany === 'function',
-    ) as Array<keyof this>;
-
-    return Promise.all(
-      models.map((model) => (this[model] as any).deleteMany({})),
-    );
+    await this.newsImg.deleteMany({});
+    await this.eventLog.deleteMany({});
+    await this.news.deleteMany({});
+    await this.admin.deleteMany({});
+    await this.partner.deleteMany({});
+    await this.aboutSection.deleteMany({});
+    await this.statistic.deleteMany({});
+    await this.solution.deleteMany({});
+    await this.teamPage.deleteMany({});
+    await this.link.deleteMany({});
   }
 }

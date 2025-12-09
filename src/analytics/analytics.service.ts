@@ -20,12 +20,19 @@ export class AnalyticsService {
       return { ok: false };
     }
     try {
-      const created = await (this.prisma as any).eventLog.create?.({
-        data: { type, newsId: newsId ?? null, path: path ?? null, userId: userId ?? null, userAgent: userAgent ?? null, ip: ip ?? null },
+      const created = await this.prisma.eventLog.create({
+        data: {
+          type,
+          newsId: newsId ?? null,
+          path: path ?? null,
+          userId: userId ?? null,
+          userAgent: userAgent ?? null,
+          ip: ip ?? null,
+        },
       });
       if (created && created.id) return { ok: true, id: created.id };
-    } catch (_) {
-      // fall through to raw
+    } catch {
+      void 0;
     }
 
     // Fallback: ensure table exists and insert using raw SQL

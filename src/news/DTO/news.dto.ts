@@ -77,6 +77,15 @@ export class CreateNewsDto {
   @IsOptional()
   @IsArray()
   imagesBase64?: string[];
+
+  @ApiProperty({
+    description: 'Publication date (ISO string)',
+    required: false,
+    example: '2025-01-31',
+  })
+  @IsOptional()
+  @IsString()
+  date?: string;
 }
 
 export class UpdateNewsDto extends PartialType(CreateNewsDto) {
@@ -108,7 +117,9 @@ export class UpdateNewsDto extends PartialType(CreateNewsDto) {
   @IsOptional()
   @IsArray()
   @IsInt({ each: true })
-  @Transform(({ value }) => value.map(Number))
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value.map((v: unknown) => Number(v)) : [],
+  )
   imagesToDelete?: number[];
 }
 
@@ -120,7 +131,9 @@ export class DeleteNewsDto {
   })
   @IsArray()
   @IsInt({ each: true })
-  @Transform(({ value }) => value.map(Number))
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value.map((v: unknown) => Number(v)) : [],
+  )
   ids: number[];
 
   @ApiProperty({

@@ -15,7 +15,7 @@ import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -40,13 +40,16 @@ export class AuthController {
           updatedAt: user.updatedAt,
         },
       };
-    } catch (error) {
-      throw new UnauthorizedException(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new UnauthorizedException(error.message);
+      }
+      throw new UnauthorizedException('Registration failed');
     }
   }
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
+  getProfile(@Request() req: { user?: unknown }) {
+    return req.user ?? null;
   }
 }

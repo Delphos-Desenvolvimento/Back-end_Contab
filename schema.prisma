@@ -1,5 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
+  provider    = "prisma-client-js"
+  engineType  = "binary"
+  binaryTargets = ["windows"]
 }
 
 datasource db {
@@ -27,6 +29,7 @@ model Admin {
   user      String   @unique
   password  String
   role      String   @default("USER")
+  name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -151,4 +154,16 @@ model Link {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("links")
+}
+
+model Comment {
+  id         Int      @id @default(autoincrement())
+  newsId     Int
+  parentId   Int?     @map("parent_id")
+  author     String
+  email      String
+  content    String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("comments")
 }

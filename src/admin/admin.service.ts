@@ -14,11 +14,12 @@ type Admin = {
   user: string;
   password: string;
   role: string;
+  name?: string;
   createdAt: Date;
   updatedAt: Date;
 };
 
-type AdminWithoutPassword = Omit<Admin, 'password'>;
+// Removed unused AdminWithoutPassword type to satisfy lint
 type AdminCreateInput = Omit<Admin, 'id' | 'createdAt' | 'updatedAt'>;
 type AdminUpdateInput = Partial<Omit<Admin, 'id' | 'createdAt' | 'updatedAt'>>;
 
@@ -26,6 +27,7 @@ type AdminWithRelations = {
   id: number;
   user: string;
   role: string;
+  name?: string;
   createdAt: Date;
   updatedAt?: Date;
 };
@@ -38,6 +40,7 @@ export class AdminService {
     user: string;
     password: string;
     role?: string;
+    name?: string;
   }): Promise<AdminWithRelations> {
     logger.log(`Creating new admin user: ${data.user}`);
 
@@ -61,6 +64,7 @@ export class AdminService {
       user: data.user.toLowerCase(),
       password: hashedPassword,
       role: data.role || 'admin',
+      name: data.name,
     };
 
     // Create the user
@@ -77,9 +81,13 @@ export class AdminService {
 
       logger.log(`User ${data.user} created successfully`);
       return newUser;
-    } catch (error) {
-      logger.error(`Error creating user: ${error.message}`, error.stack);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error(`Error creating user: ${error.message}`, error.stack);
+        throw error;
+      }
+      logger.error('Error creating user');
+      throw new Error('Error creating user');
     }
   }
 
@@ -99,9 +107,13 @@ export class AdminService {
         },
       });
       return users;
-    } catch (error) {
-      logger.error('Error fetching admin users', error.stack);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error('Error fetching admin users', error.stack);
+        throw error;
+      }
+      logger.error('Error fetching admin users');
+      throw new Error('Error fetching admin users');
     }
   }
 
@@ -128,7 +140,7 @@ export class AdminService {
 
   async update(
     id: number,
-    data: { user?: string; password?: string; role?: string },
+    data: { user?: string; password?: string; role?: string; name?: string },
   ): Promise<AdminWithRelations> {
     logger.log(`Updating admin with ID: ${id}`);
 
@@ -165,6 +177,10 @@ export class AdminService {
       updateData.role = data.role;
     }
 
+    if (data.name !== undefined) {
+      updateData.name = data.name;
+    }
+
     if (Object.keys(updateData).length === 0) {
       logger.warn('No valid fields provided for update');
       throw new Error('No valid fields provided for update');
@@ -185,9 +201,13 @@ export class AdminService {
 
       logger.log(`Admin with ID ${id} updated successfully`);
       return updatedUser;
-    } catch (error) {
-      logger.error(`Error updating admin: ${error.message}`, error.stack);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error(`Error updating admin: ${error.message}`, error.stack);
+        throw error;
+      }
+      logger.error('Error updating admin');
+      throw new Error('Error updating admin');
     }
   }
 
@@ -213,9 +233,13 @@ export class AdminService {
 
       logger.log(`Admin with ID ${id} removed successfully`);
       return;
-    } catch (error) {
-      logger.error(`Error removing admin: ${error.message}`, error.stack);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error(`Error removing admin: ${error.message}`, error.stack);
+        throw error;
+      }
+      logger.error('Error removing admin');
+      throw new Error('Error removing admin');
     }
   }
 
@@ -254,8 +278,12 @@ export class AdminService {
         user: admin.user,
         role: admin.role || 'admin',
       };
-    } catch (error) {
-      logger.error('Error in verifyUserCredentials:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error('Error in verifyUserCredentials:', error.message);
+      } else {
+        logger.error('Error in verifyUserCredentials');
+      }
       return null;
     }
   }
@@ -300,9 +328,13 @@ export class AdminService {
         logger.debug(`Admin not found with username: ${username}`);
         return null;
       }
-    } catch (error) {
-      logger.error('Error in findByUsername:', error);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error('Error in findByUsername:', error.message);
+        throw error;
+      }
+      logger.error('Error in findByUsername');
+      throw new Error('Error in findByUsername');
     }
   }
 }

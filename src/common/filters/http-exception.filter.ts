@@ -15,8 +15,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let errorResponse: any = {
+    let status: HttpStatus | number = HttpStatus.INTERNAL_SERVER_ERROR;
+    let errorResponse: Record<string, unknown> = {
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
@@ -35,12 +35,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
     // Handle NestJS HttpException
     else if (exception instanceof HttpException) {
       status = exception.getStatus();
-      const response = exception.getResponse();
+      const resp = exception.getResponse();
 
       errorResponse = {
         ...errorResponse,
         statusCode: status,
-        ...(typeof response === 'string' ? { message: response } : response),
+        ...(typeof resp === 'string' ? { message: resp } : resp),
       };
     }
     // Handle other errors
@@ -56,10 +56,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     // Log the error
-    if (status >= 500) {
+    const statusNum = typeof status === 'number' ? status : Number(status);
+    if (statusNum >= 500) {
       console.error('Unhandled exception:', exception);
     }
 
-    response.status(status).json(errorResponse);
+    response.status(statusNum).json(errorResponse);
   }
 }
