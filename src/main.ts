@@ -62,6 +62,8 @@ async function bootstrap() {
 
   logger.log(`NODE_ENV=${nodeEnv}`);
 
+  app.setGlobalPrefix('api');
+
   app.use((req: Request, res: Response, next: NextFunction) => {
     const origin =
       typeof req.headers.origin === 'string' ? req.headers.origin : frontendUrl;
