@@ -11,7 +11,7 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   // Get environment variables with defaults
-  const port = parseInt(process.env.PORT || '3333', 10);
+  const port = parseInt(process.env.PORT || '3000', 10);
   const host = process.env.HOST || '0.0.0.0';
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   const nodeEnv = process.env.NODE_ENV || 'development';
