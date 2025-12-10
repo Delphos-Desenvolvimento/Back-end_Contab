@@ -17,12 +17,11 @@ export class StatsService {
       latestNews,
       adminCount,
       categories,
-    ] = await Promise.all([
+    ] = await this.prisma.$transaction([
       this.prisma.news.count(),
       this.prisma.news.count({ where: { status: 'publicada' } }),
       this.prisma.news.count({ where: { status: 'arquivado' } }),
       this.prisma.news.count({ where: { status: 'rascunho' } }),
-      // Calculate total views from EventLog instead of News table
       this.prisma.eventLog.count({ where: { type: 'news_view' } }),
       this.prisma.newsImg.count(),
       this.prisma.news.findFirst({
@@ -33,11 +32,17 @@ export class StatsService {
       this.prisma.news.groupBy({
         by: ['category'],
         _count: { category: true },
+        orderBy: { category: 'asc' },
       }),
     ]);
 
-    const topCategories = categories
-      .map((c) => ({ category: c.category, count: c._count.category }))
+    const topCategories = (
+      categories as Array<{ category: string; _count: { category: number } }>
+    )
+      .map((c) => ({
+        category: c.category,
+        count: Number(c._count?.category ?? 0),
+      }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 

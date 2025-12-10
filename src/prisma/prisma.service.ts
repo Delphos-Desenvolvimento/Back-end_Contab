@@ -20,7 +20,23 @@ export class PrismaService
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
+    const envUrl = process.env.DATABASE_URL;
+    let url = envUrl;
+    if (envUrl) {
+      try {
+        const u = new URL(envUrl);
+        const sp = u.searchParams;
+        if (!sp.has('connection_limit')) sp.set('connection_limit', '20');
+        if (!sp.has('pool_timeout')) sp.set('pool_timeout', '60');
+        u.search = sp.toString();
+        url = u.toString();
+      } catch {
+        url = envUrl;
+      }
+    }
+
     super({
+      datasources: url ? { db: { url } } : undefined,
       log: [
         { level: 'warn', emit: 'stdout' },
         { level: 'error', emit: 'stdout' },

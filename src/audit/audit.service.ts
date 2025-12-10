@@ -59,15 +59,31 @@ export class AuditService {
       : [];
     const usersById = new Map(users.map((u) => [u.id, u]));
 
+    const newsIds = Array.from(
+      new Set(
+        items
+          .map((l) => l.newsId)
+          .filter((id): id is number => typeof id === 'number'),
+      ),
+    );
+    const news = newsIds.length
+      ? await this.prisma.news.findMany({
+          where: { id: { in: newsIds } },
+          select: { id: true, title: true },
+        })
+      : [];
+    const newsById = new Map(news.map((n) => [n.id, n.title]));
+
     const results = items.map((l) => ({
       id: (l as unknown as { id: number }).id,
       type: l.type,
       path: l.path ?? null,
       newsId: l.newsId ?? null,
+      newsTitle: l.newsId ? (newsById.get(l.newsId) ?? null) : null,
       userId: l.userId ?? null,
       user: l.userId ? (usersById.get(l.userId) ?? null) : null,
       userAgent: l.userAgent ?? null,
-      ip: l.ip ?? null,
+      ip: null as string | null, // Hide IP in API response
       createdAt: l.createdAt,
     }));
 
