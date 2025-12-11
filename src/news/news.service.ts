@@ -94,28 +94,34 @@ export class NewsService {
   }
 
   async findAll(status?: string) {
-    return this.prisma.news.findMany({
-      where: status ? { status } : undefined,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        title: true,
-        content: true,
-        category: true,
-        date: true,
-        status: true,
-        views: true,
-        createdAt: true,
-        updatedAt: true,
-        images: {
-          select: {
-            id: true,
-            base64: true,
-            altText: true,
+    try {
+      return this.prisma.news.findMany({
+        where: status ? { status } : undefined,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          category: true,
+          date: true,
+          status: true,
+          views: true,
+          createdAt: true,
+          updatedAt: true,
+          images: {
+            select: {
+              id: true,
+              base64: true,
+              altText: true,
+            },
           },
         },
-      },
-    });
+      });
+    } catch (e: unknown) {
+      const err = e as { code?: string };
+      if (err && err.code === 'P1001') return [];
+      throw e;
+    }
   }
 
   async findOne(id: number) {
@@ -155,13 +161,19 @@ export class NewsService {
   }
 
   async getViewCount(newsId: number): Promise<number> {
-    const count = await this.prisma.eventLog.count({
-      where: {
-        newsId,
-        type: 'news_view',
-      },
-    });
-    return count;
+    try {
+      const count = await this.prisma.eventLog.count({
+        where: {
+          newsId,
+          type: 'news_view',
+        },
+      });
+      return count;
+    } catch (e: unknown) {
+      const err = e as { code?: string };
+      if (err && err.code === 'P1001') return 0;
+      throw e;
+    }
   }
 
   async update(id: number, updateNewsDto: UpdateNewsDto) {

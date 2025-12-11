@@ -12,21 +12,40 @@ export class ContentService {
 
   // About Section
   async getAboutSection() {
-    let about = await this.prisma.aboutSection.findFirst();
-
-    // Se não existir, criar com valores padrão
-    if (!about) {
-      about = await this.prisma.aboutSection.create({
-        data: {
+    try {
+      let about = await this.prisma.aboutSection.findFirst();
+      if (!about) {
+        about = await this.prisma.aboutSection.create({
+          data: {
+            overline: 'Sobre Nós',
+            title: 'A Contab é líder em tecnologia para gestão pública',
+            subtitle:
+              'Somos a evolução da gestão pública, com soluções inovadoras para arrecadar mais, atender melhor e acelerar a transformação digital com um sistema de gestão pública em nuvem.',
+          },
+        });
+      }
+      return about;
+    } catch (e: unknown) {
+      const err = e as { code?: string };
+      if (err && err.code === 'P1001') {
+        const now = new Date().toISOString();
+        return {
+          id: 0,
           overline: 'Sobre Nós',
           title: 'A Contab é líder em tecnologia para gestão pública',
           subtitle:
             'Somos a evolução da gestão pública, com soluções inovadoras para arrecadar mais, atender melhor e acelerar a transformação digital com um sistema de gestão pública em nuvem.',
-        },
-      });
+          solutionsOverline: 'Nossas Soluções',
+          solutionsTitle:
+            'Transforme sua gestão com nossas soluções inteligentes',
+          solutionsSubtitle:
+            'Oferecemos um ecossistema completo de soluções em nuvem para modernizar e otimizar todos os processos da gestão pública.',
+          createdAt: now,
+          updatedAt: now,
+        } as unknown as { id: number };
+      }
+      throw e;
     }
-
-    return about;
   }
 
   async updateAboutSection(data: UpdateAboutDto) {
@@ -40,16 +59,28 @@ export class ContentService {
 
   // Statistics
   async getAllStatistics() {
-    return this.prisma.statistic.findMany({
-      where: { isActive: true },
-      orderBy: { order: 'asc' },
-    });
+    try {
+      return this.prisma.statistic.findMany({
+        where: { isActive: true },
+        orderBy: { order: 'asc' },
+      });
+    } catch (e: unknown) {
+      const err = e as { code?: string };
+      if (err && err.code === 'P1001') return [];
+      throw e;
+    }
   }
 
   async getAllStatisticsAdmin() {
-    return this.prisma.statistic.findMany({
-      orderBy: { order: 'asc' },
-    });
+    try {
+      return this.prisma.statistic.findMany({
+        orderBy: { order: 'asc' },
+      });
+    } catch (e: unknown) {
+      const err = e as { code?: string };
+      if (err && err.code === 'P1001') return [];
+      throw e;
+    }
   }
 
   async getStatisticById(id: number) {
@@ -110,16 +141,28 @@ export class ContentService {
 
   // Solutions
   async getAllSolutions() {
-    return this.prisma.solution.findMany({
-      where: { isActive: true },
-      orderBy: { order: 'asc' },
-    });
+    try {
+      return this.prisma.solution.findMany({
+        where: { isActive: true },
+        orderBy: { order: 'asc' },
+      });
+    } catch (e: unknown) {
+      const err = e as { code?: string };
+      if (err && err.code === 'P1001') return [];
+      throw e;
+    }
   }
 
   async getAllSolutionsAdmin() {
-    return this.prisma.solution.findMany({
-      orderBy: { order: 'asc' },
-    });
+    try {
+      return this.prisma.solution.findMany({
+        orderBy: { order: 'asc' },
+      });
+    } catch (e: unknown) {
+      const err = e as { code?: string };
+      if (err && err.code === 'P1001') return [];
+      throw e;
+    }
   }
 
   async getSolutionById(id: number) {
