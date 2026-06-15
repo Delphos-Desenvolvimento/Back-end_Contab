@@ -1,9 +1,32 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
     console.log('Seeding content data...');
+
+    // Seed mock admin profile for initial access/testing.
+    const mockAdminEmail = process.env.MOCK_ADMIN_EMAIL || 'admin@contab-pi.com.br';
+    const mockAdminPassword = process.env.MOCK_ADMIN_PASSWORD || 'Admin@123456';
+    const mockAdminName = process.env.MOCK_ADMIN_NAME || 'Administrador Contab';
+    const hashedMockAdminPassword = await bcrypt.hash(mockAdminPassword, 10);
+
+    const mockAdmin = await prisma.admin.upsert({
+        where: { user: mockAdminEmail.toLowerCase() },
+        update: {
+            name: mockAdminName,
+            role: 'ADMIN',
+            password: hashedMockAdminPassword,
+        },
+        create: {
+            user: mockAdminEmail.toLowerCase(),
+            name: mockAdminName,
+            role: 'ADMIN',
+            password: hashedMockAdminPassword,
+        },
+    });
+    console.log('✓ Mock admin profile created:', mockAdmin.user);
 
     // Seed About Section
     const about = await prisma.aboutSection.upsert({
