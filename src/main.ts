@@ -12,7 +12,7 @@ async function bootstrap() {
   const defaultFrontendUrl = 'https://contab-pi.com.br';
   const normalizeOrigin = (origin: string) => origin.replace(/\/$/, '');
 
-  const port = parseInt(process.env.PORT || '3000', 10);
+  const port = parseInt(process.env.PORT || '3001', 10);
   const host = process.env.HOST || '0.0.0.0';
   const frontendUrl = normalizeOrigin(
     process.env.FRONTEND_URL || defaultFrontendUrl,
